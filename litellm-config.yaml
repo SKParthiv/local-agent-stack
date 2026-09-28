@@ -1,0 +1,134 @@
+# ============================================================================
+# litellm-config.yaml — the routing table for the LiteLLM proxy.
+#
+# WHAT THIS FILE IS:
+# The LiteLLM proxy reads this file at startup. It defines:
+#   1. Which models exist (the "model_list" section)
+#   2. What friendly name each one is reachable under (the "model_name" field)
+#   3. Where the actual model lives (the "api_base" URL)
+#
+# MENTAL MODEL:
+#   Clients (like OpenCode) only ever talk to the proxy at:
+#       http://localhost:4000/v1
+#   and ask for a model by its friendly name, e.g. "local-fast".
+#   The proxy looks up "local-fast" in this file, sees it maps to
+#   qwen2.5-coder:7b on your local Ollama server, and forwards the request.
+#   Clients never need to know where the model actually lives.
+#
+# YAML SYNTAX NOTES (if you've never read YAML before):
+#   - Two-space indentation defines nesting. NO TABS allowed in YAML.
+#   - A dash (-) at the same indent level starts a list item.
+#   - A hash (#) starts a comment to end of line.
+#   - "key: value" pairs under a key form a mapping (like a dict in Python).
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# model_list — every model your proxy serves, one list item per model.
+# ----------------------------------------------------------------------------
+model_list:
+
+  # ---- Entry 1: local-fast (your everyday driver) --------------------------
+  - model_name: local-fast
+    # ^ The PUBLIC name. This is what clients send as "model" in their API
+    #   requests. Pick something meaningful to you; it has nothing to do
+    #   with the real model's name.
+
+    litellm_params:
+      # ^ All the settings LiteLLM needs to actually reach the model.
+      #   These are passed straight into litellm.completion() under the hood.
+
+      model: ollama/qwen2.5-coder:7b
+      # ^ The REAL model, prefixed with its provider ("ollama/").
+      #   The prefix tells LiteLLM which provider adapter to use.
+      #   "qwen2.5-coder:7b" must exactly match the tag you pulled with
+      #   `ollama pull qwen2.5-coder:7b`.
+
+      api_base: http://localhost:11434
+      # ^ Where your Ollama server listens. 11434 is Ollama's default port.
+      #   NOTE: for the "ollama/" provider, use the bare base URL WITHOUT
+      #   a trailing /v1 — LiteLLM adds the API path itself.
+
+      # (No api_key line needed: Ollama doesn't require authentication
+      #  on localhost. LiteLLM is fine with it being absent here.)
+
+  # ---- Entry 2: local-heavy (slow lane for big generation jobs) -----------
+  - model_name: local-heavy
+    # ^ Second public name. Same idea as above.
+
+    litellm_params:
+      model: ollama/qwen3-coder:30b
+      # ^ The 30B model. WARNING: this is ~19 GB of weights, and your GPU
+      #   has 8 GB VRAM. Ollama will put what fits in VRAM and stream the
+      #   rest from system RAM. It works, but expect several tokens/second
+      #   or worse. Fine for "generate this once while I get coffee",
+      #   painful for interactive agent loops.
+
+      api_base: http://localhost:11434
+      # ^ Same Ollama server; both models live there.
+
+  # ---- Entry 3: Gemini free tier (COMMENTED OUT — enable when ready) ------
+  # To enable: delete the "# " at the start of each line below, get a free
+  # API key, and paste it where indicated.
+  #
+  # WHERE TO GET A FREE KEY: Google AI Studio → https://aistudio.google.com/
+  #   Sign in with any Google account → "Get API key" → create key → copy it.
+  #   The free tier is rate-limited but costs nothing.
+  #
+  # SECURITY: do NOT paste a real key here and commit it. The recommended
+  # pattern is the "os.environ/" prefix shown below — LiteLLM reads the key
+  # from an environment variable instead of this file, so the repo stays clean:
+  #
+  #   In PowerShell, before starting the proxy:
+  #     $env:GEMINI_API_KEY = "your-real-key-here"
+  #   (that sets it for the current PowerShell session only)
+  #   Or set it permanently (Windows "system environment variables" GUI), or
+  #   use [setx GEMINI_API_KEY "your-real-key-here"] once in a terminal.
+  #
+  #- model_name: gemini-free
+  #  litellm_params:
+  #    model: gemini/gemini-2.0-flash
+  #    # ^ REAL model name, prefixed "gemini/". Check the current free-tier
+  #    #   model names in AI Studio — Google renames these periodically.
+  #    api_key: os.environ/GEMINI_API_KEY
+  #    # ^ "os.environ/GEMINI_API_KEY" is LiteLLM syntax meaning:
+  #    #   "read the value from the environment variable GEMINI_API_KEY".
+  #    #   Replace this whole line with the actual key ONLY if you are
+  #    #   100% sure this file will never be committed/pushed.
+
+# ----------------------------------------------------------------------------
+# litellm_settings — how the proxy itself behaves.
+# ----------------------------------------------------------------------------
+litellm_settings:
+  drop_params: true
+  # ^ Some clients send parameters your local models don't understand
+  #   (e.g. OpenCode might send an OpenAI-specific option that Ollama
+  #   ignores). With this ON, the proxy silently drops unknown parameters
+  #   instead of erroring. For a local stack this is almost always what you
+  #   want — it makes "any OpenAI-compatible client" actually work.
+
+  # NOTE ON REQUEST LOGGING (important, read this):
+  # There is NO reliable "write requests to a file" config key. The env var
+  # LITELLM_LOG_FILE is mentioned in old docs but is NOT implemented.
+  # The honest way to capture full request/response logs:
+  #   1. start-proxy.ps1 sets LITELLM_LOG=INFO (more verbose logging)
+  #   2. start-proxy.ps1 tees the proxy's console output to
+  #      proxy-logs/proxy-YYYYMMDD-HHMMSS.log (gitignored)
+  # That file is your debugging layer: every request the proxy handles
+  # shows up there with model name, and with INFO verbosity you get
+  # request/response summaries. For even more detail, edit start-proxy.ps1
+  # and change LITELLM_LOG to DEBUG.
+
+  # turn_off_message_logging: true
+  # ^ Uncomment the line above if you ever start sending private/sensitive
+  #   things through the proxy and don't want message contents in the logs.
+  #   (Metadata — model, tokens, timing — still gets logged.)
+
+# ----------------------------------------------------------------------------
+# general_settings — proxy-wide options.
+# ----------------------------------------------------------------------------
+general_settings:
+  # master_key: sk-1234
+  # ^ OPTIONAL: if you ever expose the proxy beyond localhost (e.g. over
+  #   Tailscale, see PHASE2.md), uncomment this and set a long random string.
+  #   Clients must then send it as a Bearer token. For a localhost-only
+  #   setup it's unnecessary, so it stays commented out.
