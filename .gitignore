@@ -1,0 +1,16 @@
+# LiteLLM proxy console output. Contains full request/response bodies.
+# Never commit this - it will contain everything you ever sent to a model.
+proxy-logs/
+
+# Python virtual environment, if you make one (recommended on Windows)
+.venv/
+venv/
+
+# LiteLLM database file (the proxy creates this if you ever enable the DB)
+litellm_db/
+*.db
+
+# OS noise
+Thumbs.db
+desktop.ini
+.DS_Store
