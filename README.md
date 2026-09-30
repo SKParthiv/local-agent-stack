@@ -171,6 +171,7 @@ model) through your proxy.
 | `litellm` not found | New terminal needed after install, or pip isn't on PATH. |
 | Proxy started but requests 404 | Client baseURL missing `/v1`, or model name typo'd — must match `model_name` in the YAML exactly. |
 | Requests hang forever on `local-heavy` | Expected-ish: the 30B model is partially in RAM. Switch to `local-fast`. |
+| Model pull dies mid-download (`wsarecv` / connection closed) | Network drop. Ollama **resumes** partial pulls — just retry `ollama pull <model>` or re-run `install.ps1` (it now retries 3x automatically). |
 | OpenCode ignores your config | Check you saved it as `opencode.json` (not `.json.txt`) in the right folder, and picked the `litellm/...` model in the picker. |
 | Want to see exactly what agents send | Set `$env:LITELLM_LOG = "DEBUG"` in start-proxy.ps1, restart, read `proxy-logs\`. |
 

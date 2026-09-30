@@ -33,6 +33,27 @@ function Has-Command($name) {
     return [bool](Get-Command $name -ErrorAction SilentlyContinue)
 }
 
+# --- Helper: pull a model with retries --------------------------------------
+# Big downloads over flaky connections die mid-stream. Ollama keeps the
+# partial download and RESUMES from where it stopped, so retrying is cheap
+# and safe. We try up to 3 times with a pause between attempts.
+function Pull-Model($model) {
+    foreach ($attempt in 1..3) {
+        Write-Host "[..] Pulling $model (attempt $attempt of 3)..." -ForegroundColor Cyan
+        ollama pull $model
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "[ok] $model is ready." -ForegroundColor Green
+            return $true
+        }
+        Write-Host "[!!] Pull attempt $attempt failed (network hiccup?)." -ForegroundColor Yellow
+        if ($attempt -lt 3) {
+            Write-Host "     Waiting 30 seconds before retrying (download resumes)..." -ForegroundColor Gray
+            Start-Sleep -Seconds 30
+        }
+    }
+    return $false
+}
+
 Write-Host "=== local-agent-stack installer ===" -ForegroundColor Cyan
 Write-Host ""
 
@@ -156,28 +177,23 @@ if (-not $ollamaUp) {
 Write-Host "[ok] Ollama server is running." -ForegroundColor Green
 
 # Pull the fast model. (Idempotent: 'ollama pull' on an existing model
-# just verifies it and exits immediately.)
+# just verifies it and exits immediately. Interrupted pulls resume.)
 $fast = "qwen2.5-coder:7b"
-Write-Host "[..] Pulling $fast (~5 GB download, one time)..." -ForegroundColor Cyan
-ollama pull $fast
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[!!] Model pull failed. Try manually: ollama pull $fast" -ForegroundColor Red
+if (-not (Pull-Model $fast)) {
+    Write-Host "[!!] Pull kept failing. Re-run this script later - it will resume" -ForegroundColor Red
+    Write-Host "     the download where it stopped. Or retry manually: ollama pull $fast"
     exit 1
 }
-Write-Host "[ok] $fast is ready." -ForegroundColor Green
 
 # The heavy model is a 19 GB download that will NOT fit in 8 GB VRAM and
 # runs slowly (partially in RAM). Only pull it if the user actively wants it.
 $heavy = "qwen3-coder:30b"
 $wantsHeavy = Read-Host "Also pull $heavy now? ~19 GB, slow on 8 GB VRAM. Recommended: add it later. [y/N]"
 if ($wantsHeavy -eq 'y' -or $wantsHeavy -eq 'Y') {
-    Write-Host "[..] Pulling $heavy (this can take a long time)..." -ForegroundColor Cyan
-    ollama pull $heavy
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[!!] Heavy model pull failed - not fatal, retry anytime:" -ForegroundColor Yellow
+    # Non-fatal if it fails - the fast model is what matters.
+    if (-not (Pull-Model $heavy)) {
+        Write-Host "[!!] Heavy model pull failed - not fatal, retry anytime (it resumes):" -ForegroundColor Yellow
         Write-Host "     ollama pull $heavy"
-    } else {
-        Write-Host "[ok] $heavy is ready." -ForegroundColor Green
     }
 } else {
     Write-Host "[ok] Skipping $heavy (pull it anytime with: ollama pull $heavy)" -ForegroundColor Gray
