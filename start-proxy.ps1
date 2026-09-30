@@ -1,5 +1,5 @@
 # ============================================================================
-# start-proxy.ps1 — one-shot launcher for the LiteLLM proxy (Windows native).
+# start-proxy.ps1 - one-shot launcher for the LiteLLM proxy (Windows native).
 #
 # WHAT IT DOES, IN ORDER:
 #   1. Checks that Ollama is running (the proxy is useless without it)
@@ -48,7 +48,7 @@ try {
 # --- 2. Check the default model is pulled ------------------------------------
 # 'local-fast' maps to qwen2.5-coder:7b in litellm-config.yaml. If it isn't
 # pulled yet, requests will fail with a confusing error, so check up front.
-# (We only check the fast model — the heavy one takes ages to pull and you
+# (We only check the fast model - the heavy one takes ages to pull and you
 #  might not want it yet.)
 $requiredModel = "qwen2.5-coder:7b"
 try {
@@ -64,7 +64,7 @@ try {
     }
 } catch {
     Write-Host "[??] Could not read Ollama's model list: $_" -ForegroundColor Yellow
-    Write-Host "     Continuing anyway — if requests fail, run: ollama pull $requiredModel"
+    Write-Host "     Continuing anyway - if requests fail, run: ollama pull $requiredModel"
 }
 
 # --- 3. Prepare the log file --------------------------------------------------
