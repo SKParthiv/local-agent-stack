@@ -29,6 +29,7 @@ secret key.
 | `litellm-config.yaml` | The proxy's routing table: friendly names → real models. Heavily commented. |
 | `start-proxy.ps1` | PowerShell script: checks Ollama, starts the proxy, saves logs. |
 | `verify.md` | First-run checklist — follow it once, top to bottom. |
+| `ARCHITECTURE.md` | Design doc for later phases. Read it, don't build it yet. |
 | `PHASE2.md` | Future ideas (phone access, remote access, MCP). Docs only, nothing installed. |
 
 ## Install (Windows 11, native — no WSL)

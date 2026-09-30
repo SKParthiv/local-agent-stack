@@ -3,6 +3,10 @@
 Short notes for where this stack could go. None of this is needed for the
 core pipeline; do not install any of it until Phase 1 is boring and stable.
 
+> **The build-out roadmap now lives in [ARCHITECTURE.md](ARCHITECTURE.md)**
+> (orchestration, model registry, escalation, later phases). This file
+> keeps the *access-surface* ideas: how you reach the stack from elsewhere.
+
 ## Open WebUI over Ollama — chat from your phone
 
 Open WebUI is a self-hosted ChatGPT-style web interface that talks to
