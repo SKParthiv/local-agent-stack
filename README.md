@@ -27,6 +27,7 @@ secret key.
 | File | What it is |
 |---|---|
 | `litellm-config.yaml` | The proxy's routing table: friendly names → real models. Heavily commented. |
+| `install.ps1` | One-shot installer: Ollama, LiteLLM, OpenCode, models, config. Safe to re-run. |
 | `start-proxy.ps1` | PowerShell script: checks Ollama, starts the proxy, saves logs. |
 | `verify.md` | First-run checklist — follow it once, top to bottom. |
 | `ARCHITECTURE.md` | Design doc for later phases. Read it, don't build it yet. |
@@ -35,6 +36,11 @@ secret key.
 ## Install (Windows 11, native — no WSL)
 
 Each command installs one layer. Run them in PowerShell.
+
+**Shortcut:** run `.\install.ps1` from this repo's folder — it performs
+everything in this section (plus the model pulls and the OpenCode config),
+skips anything already installed, and is safe to re-run. The breakdown
+below is what it does, step by step, if you'd rather run them yourself.
 
 ```powershell
 # Ollama: the app that runs models locally on your GPU.
