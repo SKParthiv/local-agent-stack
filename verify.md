@@ -90,7 +90,7 @@ proxy terminal output, it names the exact error.
  silently off to some cloud provider.
 
 1. Make sure the OpenCode config from the README (the `opencode.json`
-   snippet) is saved and the proxy is still running.
+   snippet, v2 format) is saved and the proxy is still running.
 2. In any project folder, run `opencode`.
 3. In OpenCode's model picker, select the `litellm/local-fast` model
    (provider "litellm", model "local-fast").

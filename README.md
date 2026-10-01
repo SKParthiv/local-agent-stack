@@ -111,11 +111,11 @@ this as `opencode.json` in the folder where you run OpenCode (or globally at
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "litellm/local-fast",
-  "provider": {
+  "providers": {
     "litellm": {
-      "npm": "@ai-sdk/openai-compatible",
+      "package": "aisdk:@ai-sdk/openai-compatible",
       "name": "LiteLLM (local)",
-      "options": {
+      "settings": {
         "baseURL": "http://localhost:4000/v1",
         "apiKey": "no-key-needed"
       },
@@ -133,9 +133,16 @@ Line-by-line, because every field matters:
 | Field | Meaning |
 |---|---|
 | `"model": "litellm/local-fast"` | Your default model: the `local-fast` model from the provider named `litellm`. Format is always `provider/model`. |
-| `"npm": "@ai-sdk/openai-compatible"` | Tells OpenCode to speak the OpenAI-compatible API — the dialect LiteLLM serves. |
-| `"options.baseURL"` | Where the proxy lives. **Must include `/v1`** — that's the API version path LiteLLM serves. |
-| `"options.apiKey"` | LiteLLM (our config) doesn't check keys locally, but the client library requires *some* value — any string works. |
+| `"package": "aisdk:@ai-sdk/openai-compatible"` | Tells OpenCode to speak the OpenAI-compatible API — the dialect LiteLLM serves. The `aisdk:` prefix is required in v2 (an unprefixed name silently fails at runtime). |
+| `"settings.baseURL"` | Where the proxy lives. **Must include `/v1`** — that's the API version path LiteLLM serves. |
+| `"settings.apiKey"` | LiteLLM (our config) doesn't check keys locally, but the client library requires *some* value — any string works. |
+
+> **v1 → v2 note:** OpenCode renamed `provider` → `providers`, `npm` →
+> `package` (with the `aisdk:` prefix), and `options` → `settings` in v2.
+> If you find an old tutorial using the v1 keys, translate it with this table.
+> Also: OpenCode v2 auto-detects a local Ollama server and lists its models
+> (e.g. `qwen2.5-coder:7b`) directly — those entries bypass the proxy. Use
+> the `litellm/...` entries to go through your pipeline.
 | `"models"` | The models OpenCode shows in its picker. Keys must match the `model_name` values in `litellm-config.yaml`. |
 
 Inside OpenCode, the model picker (Tab → models, or the `/models` command)

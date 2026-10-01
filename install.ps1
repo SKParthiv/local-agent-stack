@@ -217,18 +217,18 @@ if ($writeConfig -ne 'n' -and $writeConfig -ne 'N') {
         Write-Host "[ok] Existing config backed up to: $backup" -ForegroundColor Yellow
     }
 
-    # This JSON is identical to the snippet in README.md. It is written with
-    # a PowerShell here-string (@' ... '@) so the JSON stays readable and
-    # nothing inside it gets accidentally interpreted by PowerShell.
+    # This JSON is identical to the snippet in README.md (OpenCode v2 format).
+    # It is written with a PowerShell here-string (@' ... '@) so the JSON
+    # stays readable and nothing inside it gets accidentally interpreted.
     $ocJson = @'
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "litellm/local-fast",
-  "provider": {
+  "providers": {
     "litellm": {
-      "npm": "@ai-sdk/openai-compatible",
+      "package": "aisdk:@ai-sdk/openai-compatible",
       "name": "LiteLLM (local)",
-      "options": {
+      "settings": {
         "baseURL": "http://localhost:4000/v1",
         "apiKey": "no-key-needed"
       },
