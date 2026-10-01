@@ -150,8 +150,12 @@ Open **[verify.md](verify.md)** and follow the four steps. Short version:
 # 1. Ollama alive? -> JSON listing your models
 curl.exe http://localhost:11434/api/tags
 
-# 2. Proxy routes? -> JSON chat completion, "model":"local-fast"
-curl.exe http://localhost:4000/v1/chat/completions -d '{\"model\": \"local-fast\", \"messages\": [{\"role\": \"user\", \"content\": \"Say banana.\"}]}'
+# 2. Proxy routes? -> reply text "banana" (here-string avoids PowerShell
+#    quote mangling; plain curl one-liners corrupt JSON bodies in PS 5.1)
+$body = @'
+{"model": "local-fast", "messages": [{"role": "user", "content": "Say banana."}]}
+'@
+(Invoke-RestMethod -Uri "http://localhost:4000/v1/chat/completions" -Method Post -ContentType "application/json" -Body $body).choices[0].message.content
 ```
 
 ```powershell

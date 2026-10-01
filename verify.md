@@ -3,12 +3,12 @@
 Work through this top to bottom the first time. Each step tests one layer of
 the pipeline, so when something breaks you know *exactly* which layer broke.
 
-> **Windows curl note:** `curl` is built into Windows 10/11 PowerShell, but in
-> PowerShell you may need to write `curl.exe` instead of `curl` (plain `curl`
-> is an alias for `Invoke-WebRequest`, which has different flags). All
-> commands below use `curl.exe`. Also: in PowerShell, double quotes inside
-> double-quoted JSON need escaping — the commands below are written to work
-> when pasted into PowerShell as-is.
+> **Windows note:** Step 1 uses `curl.exe` (built into Windows 10/11; the
+> `.exe` matters because plain `curl` is a PowerShell alias for something
+> else). Step 2 does NOT use curl: PowerShell 5.1 mangles double quotes when
+> passing JSON to native commands, which silently corrupts request bodies.
+> The Step 2 command uses PowerShell's own `Invoke-RestMethod` with a
+> here-string instead — no quoting problems possible.
 
 ---
 
@@ -48,19 +48,36 @@ Start the proxy first (in this repo's folder):
 Then in a **second** terminal:
 
 ```powershell
-curl.exe http://localhost:4000/v1/chat/completions -d '{\"model\": \"local-fast\", \"messages\": [{\"role\": \"user\", \"content\": \"Say the word banana and nothing else.\"}]}'
+# Paste BOTH lines together. The @' ... '@ is a "here-string": everything
+# between is passed through EXACTLY as written, no quote mangling possible.
+$body = @'
+{"model": "local-fast", "messages": [{"role": "user", "content": "Say the word banana and nothing else."}]}
+'@
+Invoke-RestMethod -Uri "http://localhost:4000/v1/chat/completions" -Method Post -ContentType "application/json" -Body $body
 ```
 
-**Expected:** JSON with a completion, like:
+**Expected:** a response object. To see just the model's reply text, run
+this right after (it re-uses the last command's output, `$r`):
 
-```json
-{"id":"chatcmpl-...","object":"chat.completion","model":"local-fast",
- "choices":[{"index":0,"message":{"role":"assistant","content":"banana"}, ...}]}
+```powershell
+$r = Invoke-RestMethod -Uri "http://localhost:4000/v1/chat/completions" -Method Post -ContentType "application/json" -Body $body
+$r.choices[0].message.content
 ```
 
-The key detail: `"model":"local-fast"` — the proxy accepted the friendly
-name and routed it. Check the proxy terminal (or the `proxy-logs\*.log`
-file): you should see the request logged there too.
+which should print:
+
+```text
+banana
+```
+
+The key detail: the reply came back at all — the proxy accepted the
+friendly name `local-fast` and routed it to Ollama. Check the proxy
+terminal (or the `proxy-logs\*.log` file): you should see the request
+logged there too.
+
+> If you see a 400 error like "Missing required parameter: 'messages'",
+> the JSON body got corrupted in transit — make sure you pasted the
+> here-string version above, not a curl one-liner.
 
 If this fails but Step 1 passed, the problem is the proxy layer — read the
 proxy terminal output, it names the exact error.
