@@ -37,11 +37,15 @@ model_list:
       # ^ All the settings LiteLLM needs to actually reach the model.
       #   These are passed straight into litellm.completion() under the hood.
 
-      model: ollama/qwen2.5-coder:7b
+      model: ollama/qwen2.5:7b-instruct
       # ^ The REAL model, prefixed with its provider ("ollama/").
       #   The prefix tells LiteLLM which provider adapter to use.
-      #   "qwen2.5-coder:7b" must exactly match the tag you pulled with
-      #   `ollama pull qwen2.5-coder:7b`.
+      #   "qwen2.5:7b-instruct" must exactly match the tag you pulled with
+      #   `ollama pull qwen2.5:7b-instruct`.
+      #   WHY INSTRUCT, NOT CODER: the coder variant echoes tool schemas as
+      #   text instead of emitting function calls. The instruct variant is
+      #   trained to actually call tools. (Verified: coder failed verify.md
+      #   step 4; instruct is the standard fix for local tool use.)
 
       api_base: http://localhost:11434
       # ^ Where your Ollama server listens. 11434 is Ollama's default port.

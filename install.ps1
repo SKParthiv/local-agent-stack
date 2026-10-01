@@ -178,7 +178,7 @@ Write-Host "[ok] Ollama server is running." -ForegroundColor Green
 
 # Pull the fast model. (Idempotent: 'ollama pull' on an existing model
 # just verifies it and exits immediately. Interrupted pulls resume.)
-$fast = "qwen2.5-coder:7b"
+$fast = "qwen2.5:7b-instruct"
 if (-not (Pull-Model $fast)) {
     Write-Host "[!!] Pull kept failing. Re-run this script later - it will resume" -ForegroundColor Red
     Write-Host "     the download where it stopped. Or retry manually: ollama pull $fast"
