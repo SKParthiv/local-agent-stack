@@ -168,6 +168,7 @@ model) through your proxy.
 | Symptom | Likely cause / fix |
 |---|---|
 | `start-proxy.ps1` says Ollama not reachable | Ollama app not launched. Start menu → Ollama. |
+| Proxy exits instantly with `UnicodeEncodeError: 'charmap' codec` | LiteLLM's banner art can't encode in the old Windows codepage when output is piped. The script now sets `PYTHONUTF8=1`; if you launch the proxy by hand instead, run `$env:PYTHONUTF8 = "1"` first. |
 | `litellm` not found | New terminal needed after install, or pip isn't on PATH. |
 | Proxy started but requests 404 | Client baseURL missing `/v1`, or model name typo'd — must match `model_name` in the YAML exactly. |
 | Requests hang forever on `local-heavy` | Expected-ish: the 30B model is partially in RAM. Switch to `local-fast`. |

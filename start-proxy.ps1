@@ -85,6 +85,14 @@ $logFile = ".\proxy-logs\proxy-$timestamp.log"
 # DEBUG shows full request/response detail (much bigger logs). Start at INFO.
 $env:LITELLM_LOG = "INFO"
 
+# PYTHONUTF8=1 forces Python into UTF-8 mode. THIS IS LOAD-BEARING on Windows:
+# when our pipe redirects the proxy's output, Python's stdout defaults to the
+# old Windows codepage (cp1252). LiteLLM's startup banner contains characters
+# cp1252 cannot encode, and the proxy CRASHES on startup with
+# "UnicodeEncodeError: 'charmap' codec can't encode characters".
+# (Verified from a real proxy log on a real Windows machine.)
+$env:PYTHONUTF8 = "1"
+
 # --- 4. Start the proxy -------------------------------------------------------
 Write-Host ""
 Write-Host "Starting LiteLLM proxy..." -ForegroundColor Cyan
@@ -97,6 +105,7 @@ Write-Host ""
 #   litellm --config litellm-config.yaml   -> run the proxy with our routing table
 #   --port 4000                            -> listen on port 4000 (LiteLLM's default)
 #   2>&1                                   -> merge error output into the same stream
+#                                            (PYTHONUTF8 above stops the cp1252 crash)
 #   | Tee-Object -FilePath $logFile        -> show output on screen AND write it
 #                                             to the log file at the same time.
 # Tee-Object is the PowerShell equivalent of Linux's `tee`.
