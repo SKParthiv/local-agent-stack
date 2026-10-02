@@ -46,14 +46,14 @@ try {
 }
 
 # --- 2. Check the default model is pulled ------------------------------------
-# 'local-fast' maps to qwen2.5-coder:7b in litellm-config.yaml. If it isn't
+# 'local-fast' maps to qwen2.5:7b-instruct in litellm-config.yaml. If it isn't
 # pulled yet, requests will fail with a confusing error, so check up front.
 # (We only check the fast model - the heavy one takes ages to pull and you
 #  might not want it yet.)
-$requiredModel = "qwen2.5-coder:7b"
+$requiredModel = "qwen2.5:7b-instruct"
 try {
     $tags = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -TimeoutSec 3
-    # The JSON has a "models" array; each item has a "name" like "qwen2.5-coder:7b".
+    # The JSON has a "models" array; each item has a "name" like "qwen2.5:7b-instruct".
     $pulled = $tags.models | Where-Object { $_.name -eq $requiredModel }
     if ($pulled) {
         Write-Host "[ok] Model '$requiredModel' is pulled." -ForegroundColor Green
